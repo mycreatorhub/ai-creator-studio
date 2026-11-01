@@ -3,11 +3,65 @@
 <style>
 :root{color-scheme:dark;--bg:#0b1020;--panel:#141b2f;--line:#2b3550;--text:#f4f7ff;--muted:#aab5ce;--accent:#8b9cff;--accent2:#b8c2ff}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#182243,var(--bg) 52%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:900px;margin:auto;padding:20px 15px 48px}.top{display:flex;gap:12px;align-items:center;margin:4px 0 22px}.logo{background:#7d8dff;color:#0a1026;border-radius:14px;padding:12px;font-weight:900;font-size:20px}.tag{color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase}.title{font-size:clamp(27px,6vw,40px);line-height:1.1;margin:2px 0 8px}.sub{color:var(--muted);margin:0 0 20px}.notice{background:#242a40;border:1px solid #555f81;padding:12px 14px;border-radius:12px;color:#dce2ff;font-size:13px;margin:16px 0}.panel{background:rgba(20,27,47,.96);border:1px solid var(--line);border-radius:18px;padding:17px;margin:14px 0;box-shadow:0 12px 30px #0002}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.wide{grid-column:1/-1}label{display:block;font-size:13px;color:#d6def5;margin-bottom:6px}input,select,textarea{width:100%;border:1px solid #3a4665;background:#0d1428;color:var(--text);border-radius:11px;padding:12px;font:inherit}textarea{min-height:88px;resize:vertical}button{border:0;border-radius:11px;padding:12px 15px;font:600 15px system-ui;cursor:pointer}.primary{background:var(--accent);color:#10162e;width:100%;margin-top:14px}.secondary{background:#252f4c;color:#edf0ff;border:1px solid #3a4665}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.hint{font-size:12px;color:var(--muted);margin-top:5px}.resultHead{display:flex;justify-content:space-between;gap:12px;align-items:center}.pill{font-size:12px;background:#252f4c;padding:5px 9px;border-radius:99px;color:#d8deff}.output{white-space:pre-wrap;color:#e8edff}.scene{border-top:1px solid var(--line);padding:13px 0}.scene h3{margin:0 0 7px;font-size:16px}.scene p{margin:5px 0;color:#e0e6fa}.muted{color:var(--muted)}.project{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--line)}.project button{padding:7px 10px;font-size:12px}.hidden{display:none}@media(max-width:580px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.panel{padding:14px}.resultHead{align-items:flex-start;flex-direction:column}}
+.usage-box {
+  background: #172b25;
+  border: 1px solid #285342;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.usage-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+#usageText {
+  color: #4ade80;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.usage-bar {
+  height: 9px;
+  background: #34443d;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 9px;
+}
+
+.usage-progress {
+  height: 100%;
+  width: 0%;
+  background: #22c55e;
+  border-radius: 20px;
+  transition: width 0.3s ease;
+}
+
+.usage-box small {
+  color: #b8c9bf;
+  font-size: 12px;
+}
 </style></head><body><main>
 <header class="top"><div class="logo">✦</div><div><div class="tag">Creator toolkit</div><strong>AI Creator Studio</strong></div></header>
 <h1 class="title">Turn an idea into a video plan.</h1><p class="sub">Create hooks, narration, timed scenes and video prompts from one topic.</p>
 <div class="notice"><strong>AI CREATOR STUDIO — LIVE:</strong> This version runs in your browser and produces structured sample drafts. It does not call an AI model yet. Your saved projects stay in this browser on this device.</div>
-<section class="panel"><form id="form"><div class="grid">
+<section class="panel">
+<div class="usage-box">
+  <div class="usage-heading">
+    <strong>Daily AI Generations</strong>
+    <span id="usageText">Checking usage...</span>
+  </div>
+  <div class="usage-bar">
+    <div id="usageProgress" class="usage-progress"></div>
+  </div>
+  <small>Free daily allowance: 5 generations</small>
+</div>
+<form id="form"><div class="grid">
 <div class="wide"><label for="topic">What's your video about?</label><textarea id="topic" required maxlength="500" placeholder="Example: The mysterious disappearance of a village in Philippine history"></textarea></div>
 <div><label for="format">Content format</label><select id="format"><option>Mystery Documentary</option><option>Philippine History</option><option>Filipino Drama</option><option>Horror / Suspense</option><option>Inspirational Story</option><option>UGC / Product Review</option><option>General Short Video</option></select></div>
 <div><label for="lang">Language</label><select id="lang"><option>Tagalog</option><option>Taglish</option><option>English</option></select></div>
@@ -77,7 +131,16 @@ if (usageError) {
 } else {
   console.log('Daily usage:', usage);
 }
+if (!usageError && usage) {
+  const used = Number(usage.used);
+  const remaining = Number(usage.remaining);
 
+  $('usageText').textContent =
+    `${remaining} of 5 remaining`;
+
+  $('usageProgress').style.width =
+    `${(used / 5) * 100}%`;
+  }
     const { data, error } =
       await supabaseClient.functions.invoke('generate-content', {
         body: {
