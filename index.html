@@ -81,7 +81,18 @@ $('form').addEventListener('submit', async e => {
         }
       });
 
-    if (error) throw error;
+if (error) {
+  if (error.message?.includes('429')) {
+    showMessage(
+      "Daily limit reached! You've used all 5 free generations today. Please try again tomorrow."
+    );
+    return;
+  }
+
+  showMessage("Could not generate your video plan. Please try again.");
+  console.error(error);
+  return;
+}
 
     if (!data || !data.success || !data.content) {
       throw new Error(data?.error || 'The AI returned no content.');
