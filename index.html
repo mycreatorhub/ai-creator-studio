@@ -19,31 +19,206 @@
 <section id="results" class="panel hidden"><div class="resultHead"><div><span class="pill">DEMO DRAFT</span><h2 id="outTitle">Your video plan</h2></div><button id="save" class="secondary">Save project</button></div><div class="actions"><button id="copy" class="secondary">Copy full plan</button><button id="download" class="secondary">Download .txt</button></div><div id="out" class="output"></div></section>
 <section class="panel"><div class="resultHead"><h2 style="margin:0">Saved projects</h2><button id="clear" class="secondary">Clear saved</button></div><p class="hint">Stored only in this browser's local storage.</p><div id="projects"></div></section>
 <footer class="hint">MVP prototype • Keep sensitive information out of prompts. Connect a server-side AI provider only after setting up secure backend secrets.</footer>
-</main><script>
-const $=id=>document.getElementById(id);let current=null;
-function scenesCount(){return Math.ceil(Number($('duration').value)/Number($('length').value))}
-function updateCount(){$('count').textContent=`Plan: ${scenesCount()} scenes × ${$('length').value}s (final scene may be shorter).`}
-$('duration').addEventListener('change',updateCount);$('length').addEventListener('change',updateCount);updateCount();
-function makePlan(topic,format,lang,duration,sec,style,delivery){
- const n=Math.ceil(duration/sec),end=duration;let out=`${format}: ${topic}\nDuration: ${duration}s | Scenes: ${n} | Visual: ${style}\nNarration delivery: ${delivery}\n\nOPENING HOOK\n${lang==='English'?'What if the story you know is only half the truth?':lang==='Taglish'?'Paano kung kalahati pa lang ang alam mo sa kuwentong ito?':'Paano kung hindi pa natin alam ang buong katotohanan sa kuwentong ito?'}\n\n`;
- let blocks=[];
- const stages=lang==='English'?['Open with a striking detail that raises a question.','Establish the place, people, and context.','Reveal the first important clue or complication.','Show what changed and why it matters.','Build tension toward the central unanswered question.','Deliver a grounded takeaway, then leave one question open.']:lang==='Taglish'?['Simulan sa nakakagulat na detalye at tanong.','Ipakilala ang lugar, mga tao, at konteksto.','Ipakita ang unang clue o problema.','Ikuwento kung ano ang nagbago at bakit mahalaga.','Palalimin ang tension papunta sa pangunahing tanong.','Magbigay ng takeaway at mag-iwan ng tanong.']:['Begin with a compelling detail and a question.','Introduce the setting, people, and context.','Reveal an important clue or complication.','Explain what changed and why it matters.','Build tension toward the central question.','Offer a takeaway and leave one question open.'];
- for(let i=0;i<n;i++){let start=i*sec,finish=Math.min((i+1)*sec,duration),stage=stages[Math.min(5,Math.floor(i/Math.max(1,n)*6))];
- let narration=lang==='English'?`${stage} Focus on: ${topic}. Keep claims factual and clearly distinguish verified facts from speculation.`:lang==='Taglish'?`${stage} I-focus ang kuwento sa: ${topic}. Ihiwalay ang verified facts sa haka-haka.`:`${stage} Ituon ang salaysay sa: ${topic}. Ihiwalay ang napatunayang impormasyon sa haka-haka.`;
- let visual=`${style}, 9:16 vertical composition, cinematic lighting, intentional camera movement. Illustrate this beat: ${stage} Topic context: ${topic}. Use relevant period-accurate details when applicable; avoid fabricated evidence, readable fake headlines, or misleading real-person likenesses.`;
- blocks.push({heading:`SCENE ${i+1} | ${String(Math.floor(start/60)).padStart(2,'0')}:${String(start%60).padStart(2,'0')}–${String(Math.floor(finish/60)).padStart(2,'0')}:${String(finish%60).padStart(2,'0')}`,narration,visual});
- out+=`${blocks[i].heading}\nNARRATION: ${narration}\nVIDEO PROMPT: ${visual}\n\n`;
- }
- const cta=lang==='English'?'Follow for more stories, and tell us what you think in the comments.':lang==='Taglish'?'Follow para sa more stories, at share your thoughts sa comments.':'Sundan kami para sa iba pang kuwento. Ibahagi ang inyong pananaw sa comments.';
- out+=`CLOSING CTA\n${cta}\n\nDEMO NOTE\nThis is a structured starter draft, not verified research or AI-generated factual narration. Verify dates, names, and claims before publishing.`;
- return {title:topic,format,lang,duration,sec,created:new Date().toISOString(),text:out,blocks};
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://pgmpetuxsadtklbwrhvy.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_4zaTD5OCRFHbElQu670nug_Td7_w9E6";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+const $ = id => document.getElementById(id);
+let current = null;
+
+function scenesCount() {
+  return Math.ceil(
+    Number($('duration').value) / Number($('length').value)
+  );
 }
-$('form').addEventListener('submit',e=>{e.preventDefault();current=makePlan($('topic').value.trim(),$('format').value,$('lang').value,Number($('duration').value),Number($('length').value),$('style').value,$('delivery').value);render(current);});
-function render(plan){$('outTitle').textContent=plan.title;$('out').textContent=plan.text;$('results').classList.remove('hidden');$('results').scrollIntoView({behavior:'smooth',block:'start'});}
-$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(current.text);$('copy').textContent='Copied!';setTimeout(()=>$('copy').textContent='Copy full plan',1400)}catch{alert('Copy is blocked by this browser. Use Download .txt instead.')}};
-$('download').onclick=()=>{let blob=new Blob([current.text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='creator-studio-plan.txt';a.click();URL.revokeObjectURL(url)};
-$('save').onclick=()=>{let list=JSON.parse(localStorage.getItem('acs-projects')||'[]');list.unshift({...current,id:Date.now()});localStorage.setItem('acs-projects',JSON.stringify(list.slice(0,30)));showProjects();$('save').textContent='Saved ✓';setTimeout(()=>$('save').textContent='Save project',1300)};
-function showProjects(){let list=JSON.parse(localStorage.getItem('acs-projects')||'[]'),root=$('projects');root.innerHTML='';if(!list.length){root.innerHTML='<p class="hint">No projects saved yet. Generate a plan and tap Save project.</p>';return;}list.forEach(p=>{let row=document.createElement('div');row.className='project';let title=document.createElement('div');title.innerHTML=`<strong></strong><div class="hint"></div>`;title.querySelector('strong').textContent=p.title;title.querySelector('.hint').textContent=new Date(p.created).toLocaleString()+' · '+p.duration+' sec';let acts=document.createElement('div');acts.className='actions';let open=document.createElement('button');open.className='secondary';open.textContent='Open';open.onclick=()=>{current=p;render(p)};let del=document.createElement('button');del.className='secondary';del.textContent='Delete';del.onclick=()=>{localStorage.setItem('acs-projects',JSON.stringify(list.filter(x=>x.id!==p.id)));showProjects()};acts.append(open,del);row.append(title,acts);root.append(row)})}
-$('clear').onclick=()=>{if(confirm('Delete all locally saved projects?')){localStorage.removeItem('acs-projects');showProjects()}};
+
+function updateCount() {
+  $('count').textContent =
+    `Plan: ${scenesCount()} scenes × ${$('length').value}s (final scene may be shorter).`;
+}
+
+$('duration').addEventListener('change', updateCount);
+$('length').addEventListener('change', updateCount);
+updateCount();
+
+$('form').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const topic = $('topic').value.trim();
+  if (!topic) return;
+
+  const button = $('form').querySelector('button[type="submit"]');
+  button.disabled = true;
+  button.textContent = 'Generating with AI…';
+
+  try {
+    let { data: { session }, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (!session) {
+      const signIn = await supabaseClient.auth.signInAnonymously();
+      if (signIn.error) throw signIn.error;
+      session = signIn.data.session;
+    }
+
+    const { data, error } =
+      await supabaseClient.functions.invoke('generate-content', {
+        body: {
+          topic,
+          format: $('format').value,
+          language: $('lang').value,
+          duration: Number($('duration').value),
+          secondsPerScene: Number($('length').value)
+        }
+      });
+
+    if (error) throw error;
+
+    if (!data || !data.success || !data.content) {
+      throw new Error(data?.error || 'The AI returned no content.');
+    }
+
+    current = {
+      title: topic,
+      format: $('format').value,
+      lang: $('lang').value,
+      duration: Number($('duration').value),
+      sec: Number($('length').value),
+      created: new Date().toISOString(),
+      text: data.content
+    };
+
+    render(current);
+
+  } catch (error) {
+    console.error(error);
+    alert(
+      'Could not generate your video plan. ' +
+      (error.message || 'Please try again.')
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = '✦ Generate my video plan';
+  }
+});
+
+function render(plan) {
+  $('outTitle').textContent = plan.title;
+  $('out').textContent = plan.text;
+  $('results').classList.remove('hidden');
+  $('results').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+}
+
+$('copy').onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(current.text);
+    $('copy').textContent = 'Copied!';
+    setTimeout(() => {
+      $('copy').textContent = 'Copy full plan';
+    }, 1400);
+  } catch {
+    alert('Copy is blocked by this browser. Use Download .txt instead.');
+  }
+};
+
+$('download').onclick = () => {
+  const blob = new Blob([current.text], {
+    type: 'text/plain;charset=utf-8'
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'creator-studio-plan.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+$('save').onclick = () => {
+  const list = JSON.parse(
+    localStorage.getItem('acs-projects') || '[]'
+  );
+  list.unshift({ ...current, id: Date.now() });
+  localStorage.setItem(
+    'acs-projects',
+    JSON.stringify(list.slice(0, 30))
+  );
+  showProjects();
+  $('save').textContent = 'Saved ✓';
+  setTimeout(() => {
+    $('save').textContent = 'Save project';
+  }, 1300);
+};
+
+function showProjects() {
+  const list = JSON.parse(
+    localStorage.getItem('acs-projects') || '[]'
+  );
+  const root = $('projects');
+  root.innerHTML = '';
+
+  if (!list.length) {
+    root.innerHTML =
+      '<p class="hint">No projects saved yet. Generate a plan and tap Save project.</p>';
+    return;
+  }
+
+  list.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'project';
+
+    const title = document.createElement('div');
+    title.innerHTML = '<strong></strong><div class="hint"></div>';
+    title.querySelector('strong').textContent = p.title;
+    title.querySelector('.hint').textContent =
+      new Date(p.created).toLocaleString() + ' · ' + p.duration + ' sec';
+
+    const acts = document.createElement('div');
+    acts.className = 'actions';
+
+    const open = document.createElement('button');
+    open.className = 'secondary';
+    open.textContent = 'Open';
+    open.onclick = () => {
+      current = p;
+      render(p);
+    };
+
+    const del = document.createElement('button');
+    del.className = 'secondary';
+    del.textContent = 'Delete';
+    del.onclick = () => {
+      localStorage.setItem(
+        'acs-projects',
+        JSON.stringify(list.filter(x => x.id !== p.id))
+      );
+      showProjects();
+    };
+
+    acts.append(open, del);
+    row.append(title, acts);
+    root.append(row);
+  });
+}
+
+$('clear').onclick = () => {
+  if (confirm('Delete all locally saved projects?')) {
+    localStorage.removeItem('acs-projects');
+    showProjects();
+  }
+};
+
 showProjects();
-</script></body></html>
+</script>
+</body></html>
