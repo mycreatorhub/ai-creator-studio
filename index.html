@@ -69,6 +69,14 @@ $('form').addEventListener('submit', async e => {
       if (signIn.error) throw signIn.error;
       session = signIn.data.session;
     }
+    const { data: usage, error: usageError } =
+  await supabaseClient.rpc('get_generation_usage');
+
+if (usageError) {
+  console.error('Usage counter error:', usageError);
+} else {
+  console.log('Daily usage:', usage);
+}
 
     const { data, error } =
       await supabaseClient.functions.invoke('generate-content', {
