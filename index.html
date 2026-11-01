@@ -49,7 +49,7 @@
 </style></head><body><main>
 <header class="top"><div class="logo">✦</div><div><div class="tag">Creator toolkit</div><strong>AI Creator Studio</strong></div></header>
 <h1 class="title">Turn an idea into a video plan.</h1><p class="sub">Create hooks, narration, timed scenes and video prompts from one topic.</p>
-<div class="notice"><strong>AI CREATOR STUDIO — LIVE:</strong> This version runs in your browser and produces structured sample drafts. It does not call an AI model yet. Your saved projects stay in this browser on this device.</div>
+<div class="notice"><strong>AI CREATOR STUDIO — LIVE:</strong>     Generate AI-powered video plans using a secure server connection. Your saved projects stay in this browser on this device..</div>
 <section class="panel">
 <div class="usage-box">
   <div class="usage-heading">
@@ -70,7 +70,7 @@
 <div><label for="style">Visual style</label><select id="style"><option>Cinematic realistic</option><option>Documentary realism</option><option>Handheld dramatic</option><option>Stylized illustration</option></select></div>
 <div><label for="delivery">Narration delivery</label><select id="delivery"><option>Intriguing, controlled and suspenseful</option><option>Warm and inspiring</option><option>Energetic and urgent</option><option>Natural conversational</option></select></div>
 </div><div class="hint" id="count"></div><button class="primary" type="submit">✦ Generate my video plan</button></form></section>
-<section id="results" class="panel hidden"><div class="resultHead"><div><span class="pill">DEMO DRAFT</span><h2 id="outTitle">Your video plan</h2></div><button id="save" class="secondary">Save project</button></div><div class="actions"><button id="copy" class="secondary">Copy full plan</button><button id="download" class="secondary">Download .txt</button></div><div id="out" class="output"></div></section>
+<section id="results" class="panel hidden"><div class="resultHead"><div><span class="pill">AI-GENERATED PLAN</span><h2 id="outTitle">Your video plan</h2></div><button id="save" class="secondary">Save project</button></div><div class="actions"><button id="copy" class="secondary">Copy full plan</button><button id="download" class="secondary">Download .txt</button></div><div id="out" class="output"></div></section>
 <section class="panel"><div class="resultHead"><h2 style="margin:0">Saved projects</h2><button id="clear" class="secondary">Clear saved</button></div><p class="hint">Stored only in this browser's local storage.</p><div id="projects"></div></section>
 <footer class="hint">AI CREATOR STUDIO• Keep sensitive information out of prompts. Connect a server-side AI provider only after setting up secure backend secrets.</footer>
 </main>
@@ -85,7 +85,40 @@ const supabaseClient = window.supabase.createClient(
 );
 
 const $ = id => document.getElementById(id);
-let current = null;
+let current = null; 
+  async function refreshUsage() {
+  try {
+    let { data: { session }, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (!session) {
+      const signIn = await supabaseClient.auth.signInAnonymously();
+      if (signIn.error) throw signIn.error;
+    }
+
+   const { data: usage, error } =
+      await supabaseClient.rpc('get_generation_usage');
+
+    if (error) throw error;
+
+    const used = Number(usage.used);
+    const remaining = Number(usage.remaining);
+
+    $('usageText').textContent =
+      `${remaining} of 5 remaining`;
+
+    $('usageProgress').style.width =
+      `${Math.min(100, (used / 5) * 100)}%`;
+
+  } catch (error) {
+    console.error('Usage counter error:', error);
+    $('usageText').textContent = 'Usage unavailable';
+  }
+}
+
+refreshUsage();
 
 function scenesCount() {
   return Math.ceil(
@@ -168,6 +201,8 @@ if (error) {
     errorData?.remaining === 0 ||
     errorData?.error?.includes("Daily limit reached")
   ) {
+    await refreshUsage();
+    
     alert("Daily limit reached! You've used all 5 free generations today. Please try again tomorrow.");
     return;
   }
@@ -192,6 +227,7 @@ if (error) {
     };
 
     render(current);
+    await refreshUsage();
 
   } catch (error) {
     console.error(error);
