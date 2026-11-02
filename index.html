@@ -188,6 +188,7 @@ $('usageProgress').style.width =
         }
       });
 
+
 if (error) {
   let errorData = null;
 
@@ -205,19 +206,21 @@ if (error) {
     errorData?.error?.includes("Daily limit reached")
   ) {
     await refreshUsage();
-    
-    if (errorData?.is_anonymous) {
-  alert("You've used your 2 free guest generations! Please sign up to unlock 5 free generations every day.");
-} else {
-  alert("You've used all 5 free generations today. Please try again tomorrow.");
-}
 
-return;
+    if (errorData?.is_anonymous) {
+      alert("You've used your 2 free guest generations! Please sign up to unlock 5 free generations every day.");
+    } else {
+      alert("You've used all 5 free generations today. Please try again tomorrow.");
+    }
+
+    return;
+  }
 
   alert(errorData?.error || "Could not generate your video plan. Please try again.");
   console.error("Generation error:", error, errorData);
   return;
 }
+
 
     if (!data || !data.success || !data.content) {
       throw new Error(data?.error || 'The AI returned no content.');
