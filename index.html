@@ -122,6 +122,40 @@ const supabaseClient = window.supabase.createClient(
 
 const $ = id => document.getElementById(id);
 let current = null; 
+  $('signInAccount').addEventListener('click', async () => {
+  const email = $('loginEmail').value.trim();
+  const password = $('loginPassword').value;
+  const message = $('loginMessage');
+  const button = $('signInAccount');
+
+  if (!email || !password) {
+    message.textContent = 'Please enter your email and password.';
+    return;
+  }
+
+  button.disabled = true;
+  message.textContent = 'Signing in...';
+
+  try {
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    if (error) throw error;
+
+    message.textContent = 'Signed in successfully!';
+    await refreshUsage();
+
+  } catch (error) {
+    console.error('Sign in error:', error);
+    message.textContent =
+      error.message || 'Could not sign in.';
+  } finally {
+    button.disabled = false;
+  }
+});
   
 $('upgradeAccount').addEventListener('click', async () => {
   const email = $('accountEmail').value.trim();
