@@ -135,7 +135,7 @@ function updateCount() {
 $('duration').addEventListener('change', updateCount);
 $('length').addEventListener('change', updateCount);
 updateCount();
-$('projectSearch').addEventListener('input', showProjects);
+showProjects);
 showProjects();
 $('form').addEventListener('submit', async e => {
   e.preventDefault();
@@ -304,15 +304,7 @@ function showProjects() {
     localStorage.getItem('acs-projects') || '[]'
   );
 
-  const searchText = $('projectSearch').value
-    .trim()
-    .toLowerCase();
-
-  const list = allProjects.filter(p =>
-    String(p.title || '')
-      .toLowerCase()
-      .includes(searchText)
-  );
+  const list = allProjects;
 
   const root = $('projects');
   root.innerHTML = '';
