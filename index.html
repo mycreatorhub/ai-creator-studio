@@ -106,6 +106,59 @@ const supabaseClient = window.supabase.createClient(
 
 const $ = id => document.getElementById(id);
 let current = null; 
+  
+$('upgradeAccount').addEventListener('click', async () => {
+  const email = $('accountEmail').value.trim();
+  const password = $('accountPassword').value;
+  const message = $('accountMessage');
+  const button = $('upgradeAccount');
+
+  if (!email || !password) {
+    message.textContent = 'Please enter your email and password.';
+    return;
+  }
+
+  if (password.length < 6) {
+    message.textContent = 'Password must be at least 6 characters.';
+    return;
+  }
+
+  button.disabled = true;
+  message.textContent = 'Creating your account...';
+
+  try {
+    let { data: { session }, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (!session) {
+      const signIn = await supabaseClient.auth.signInAnonymously();
+      if (signIn.error) throw signIn.error;
+      session = signIn.data.session;
+    }
+
+    const { data, error } = await supabaseClient.auth.updateUser({
+      email: email,
+      password: password
+    });
+
+    if (error) throw error;
+
+    message.textContent =
+      'Account updated! Check your email if confirmation is required.';
+
+    await refreshUsage();
+
+  } catch (error) {
+    console.error('Account upgrade error:', error);
+    message.textContent =
+      error.message || 'Could not update your account.';
+  } finally {
+    button.disabled = false;
+  }
+});
+
   async function refreshUsage() {
   try {
     let { data: { session }, error: sessionError } =
