@@ -60,8 +60,28 @@
     <div id="usageProgress" class="usage-progress"></div>
   </div>
   <small>Guests: 2 lifetime generations | Registered free accounts: 5 generations per day</small>
+
 </div>
-<form id="form"><div class="grid">
+
+<div class="usage-box">
+  <strong>Upgrade Your Guest Account</strong>
+  <p class="hint">Create an account to unlock 5 free generations per day.</p>
+
+  <label for="accountEmail">Email address</label>
+  <input id="accountEmail" type="email" placeholder="Enter your email">
+
+  <label for="accountPassword">Password</label>
+  <input id="accountPassword" type="password" placeholder="At least 6 characters">
+
+  <button id="upgradeAccount" class="secondary" type="button">
+    Create My Free Account
+  </button>
+
+  <p id="accountMessage" class="hint"></p>
+</div>
+
+<form id="form">
+<div class="grid">
 <div class="wide"><label for="topic">What's your video about?</label><textarea id="topic" required maxlength="500" placeholder="Example: The mysterious disappearance of a village in Philippine history"></textarea></div>
 <div><label for="format">Content format</label><select id="format"><option>Mystery Documentary</option><option>Philippine History</option><option>Filipino Drama</option><option>Horror / Suspense</option><option>Inspirational Story</option><option>UGC / Product Review</option><option>General Short Video</option></select></div>
 <div><label for="lang">Language</label><select id="lang"><option>Tagalog</option><option>Taglish</option><option>English</option></select></div>
