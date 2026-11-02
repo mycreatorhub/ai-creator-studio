@@ -179,13 +179,18 @@ $('upgradeAccount').addEventListener('click', async () => {
     const used = Number(usage.used);
 const remaining = Number(usage.remaining);
 const limit = Number(usage.limit);
+    const { data: { user }, error: userError } =
+  await supabaseClient.auth.getUser();
+
+if (userError) throw userError;
 const accountBox = $('accountMessage').parentElement;
 
 if (usage.is_anonymous === false) {
-  accountBox.innerHTML = `
-    <strong>Account Active</strong>
-    <p class="hint">Your free account is active. You have 5 free generations per day.</p>
-  `;
+accountBox.innerHTML = `
+  <strong>Account Active</strong>
+  <p class="hint">Email: ${user.email || 'Not available'}</p>
+  <p class="hint">Your free account has 5 generations per day.</p>
+`;
 } else {
   accountBox.style.display = 'block';
 }
