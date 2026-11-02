@@ -104,13 +104,14 @@ let current = null;
     if (error) throw error;
 
     const used = Number(usage.used);
-    const remaining = Number(usage.remaining);
+const remaining = Number(usage.remaining);
+const limit = Number(usage.limit);
 
-    $('usageText').textContent =
-      `${remaining} of 5 remaining`;
+$('usageText').textContent =
+  `${remaining} of ${limit} remaining`;
 
-    $('usageProgress').style.width =
-      `${Math.min(100, (used / 5) * 100)}%`;
+$('usageProgress').style.width =
+  `${Math.min(100, (used / limit) * 100)}%`;
 
   } catch (error) {
     console.error('Usage counter error:', error);
@@ -167,13 +168,14 @@ if (usageError) {
 }
 if (!usageError && usage) {
   const used = Number(usage.used);
-  const remaining = Number(usage.remaining);
+const remaining = Number(usage.remaining);
+const limit = Number(usage.limit);
 
-  $('usageText').textContent =
-    `${remaining} of 5 remaining`;
+$('usageText').textContent =
+  `${remaining} of ${limit} remaining`;
 
-  $('usageProgress').style.width =
-    `${(used / 5) * 100}%`;
+$('usageProgress').style.width =
+  `${Math.min(100, (used / limit) * 100)}%`;
   }
     const { data, error } =
       await supabaseClient.functions.invoke('generate-content', {
@@ -204,9 +206,13 @@ if (error) {
   ) {
     await refreshUsage();
     
-    alert("Daily limit reached! You've used all 5 free generations today. Please try again tomorrow.");
-    return;
-  }
+    if (errorData?.is_anonymous) {
+  alert("You've used your 2 free guest generations! Please sign up to unlock 5 free generations every day.");
+} else {
+  alert("You've used all 5 free generations today. Please try again tomorrow.");
+}
+
+return;
 
   alert(errorData?.error || "Could not generate your video plan. Please try again.");
   console.error("Generation error:", error, errorData);
