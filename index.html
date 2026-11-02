@@ -134,7 +134,8 @@ function updateCount() {
 $('duration').addEventListener('change', updateCount);
 $('length').addEventListener('change', updateCount);
 updateCount();
-
+$('projectSearch').addEventListener('input', showProjects);
+showProjects();
 $('form').addEventListener('submit', async e => {
   e.preventDefault();
 
@@ -291,12 +292,25 @@ $('save').onclick = () => {
   }, 1300);
 };
 
+
 function showProjects() {
-  const list = JSON.parse(
+  const allProjects = JSON.parse(
     localStorage.getItem('acs-projects') || '[]'
   );
+
+  const searchText = $('projectSearch').value
+    .trim()
+    .toLowerCase();
+
+  const list = allProjects.filter(p =>
+    String(p.title || '')
+      .toLowerCase()
+      .includes(searchText)
+  );
+
   const root = $('projects');
   root.innerHTML = '';
+
 
   if (!list.length) {
     root.innerHTML =
