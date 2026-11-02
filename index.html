@@ -114,9 +114,10 @@ $('usageProgress').style.width =
   `${Math.min(100, (used / limit) * 100)}%`;
 
   } catch (error) {
-    console.error('Usage counter error:', error);
-    $('usageText').textContent = 'Usage unavailable';
-  }
+  console.error('Usage counter error:', error);
+  $('usageText').textContent =
+    'Error: ' + (error.message || 'Unknown error');
+}
 }
 
 refreshUsage();
