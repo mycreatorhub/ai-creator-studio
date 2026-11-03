@@ -327,34 +327,24 @@ $('usageProgress').style.width =
 
 
 if (error) {
-  let errorData = null;
+  console.error("Generation error:", error);
+
+  let details = "No response details available.";
 
   try {
     if (error.context) {
-      errorData = await error.context.json();
+      details = await error.context.text();
     }
   } catch (e) {
-    console.error("Could not read error response:", e);
+    details = e.message;
   }
 
-  if (
-    error.context?.status === 429 ||
-    errorData?.remaining === 0 ||
-    errorData?.error?.includes("Daily limit reached")
-  ) {
-    await refreshUsage();
+  alert(
+    "GENERATION ERROR\n\n" +
+    "Message: " + error.message + "\n\n" +
+    "Details: " + details
+  );
 
-    if (errorData?.is_anonymous) {
-      alert("You've used your 2 free guest generations! Please sign up to unlock 5 free generations every day.");
-    } else {
-      alert("You've used all 5 free generations today. Please try again tomorrow.");
-    }
-
-    return;
-  }
-
-  alert(errorData?.error || "Could not generate your video plan. Please try again.");
-  console.error("Generation error:", error, errorData);
   return;
 }
 
